@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Code Cleanup Command",
+  "description": "Listens for the /codecleanup command in the command prompt and triggers code cleanup operations",
+  "version": "1",
+  "when": {
+    "type": "userTriggered",
+    "patterns": [
+      ".kiro/command-prompt.txt"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "You are a senior Level Software Engineer. The user has requested a code cleanup via the /codecleanup command. Please analyze the codebase and perform the following cleanup tasks:\n\n1. Remove unused imports and variables\n2. Fix code formatting and indentation issues\n3. Identify and remove dead code\n4. Consolidate duplicate code patterns\n5. Update outdated comments\n6. Ensure consistent naming conventions\n7. Check for and fix common code smells\nPlease clean up and restructure staged changes code according to modern best practices.\n\nGoals:\nReduce code duplication and improve reusability.\nRemove unused/obsolete code\nSplit large files or classes into smaller, focused components (e.g., separate files, extensions, or utility classes).\nMove logic into proper layers (ViewModel, Repository, Utils, Extensions, etc.)\nApply proper architectural structure\nUse clear naming conventions and consistent formatting.\nAdd comments or brief docstrings only where they help understand logic — avoid noise.\nEnsure maintainability, scalability, and readability.\nDo not change functionality unless necessary for clarity or safety.\nFollow SOLID, DRY, and Clean Architecture principles\n\n\nFocus ONLY on files that have been edited and have staged changes. If code is already clean - do not try to improve it to the edge. Prioritize improvements that enhance code readability and maintainability without changing functionality."
+  }
+}

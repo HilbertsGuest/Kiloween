@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task 25 - Jump Scare Demo</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: 'Courier New', monospace;
+      background: #1a1a1a;
+      color: #fff;
+    }
+
+    .controls {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 20px;
+      border-radius: 10px;
+      border: 2px solid #ff6b35;
+      z-index: 1000;
+      max-width: 300px;
+    }
+
+    h1 {
+      color: #ff6b35;
+      margin-top: 0;
+      font-size: 20px;
+    }
+
+    button {
+      background: #ff6b35;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      margin: 5px 0;
+      cursor: pointer;
+      border-radius: 5px;
+      width: 100%;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background: #ff8c5a;
+    }
+
+    select {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
+      background: #2a2a2a;
+      color: #fff;
+      border: 1px solid #ff6b35;
+      border-radius: 5px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .info {
+      margin-top: 15px;
+      padding: 10px;
+      background: rgba(255, 107, 53, 0.1);
+      border-radius: 5px;
+      font-size: 12px;
+    }
+
+    #scare-container {
+      width: 100vw;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    }
+
+    #jumpscare-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      pointer-events: all;
+    }
+
+    #creature-ascii {
+      color: #ff0000;
+      font-size: 14px;
+      line-height: 1.2;
+      text-align: center;
+      margin-bottom: 30px;
+      text-shadow: 0 0 10px #ff0000;
+      white-space: pre;
+      font-family: 'Courier New', 'Courier', monospace;
+      font-weight: bold;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: opacity 0.1s ease-out, transform 0.1s ease-out;
+    }
+
+    #question-container {
+      max-width: 800px;
+      width: 90%;
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(255, 165, 0, 0.3);
+      border-radius: 10px;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease-in;
+    }
+
+    #question-text {
+      color: #ffa500;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    #answer-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .answer-option {
+      padding: 15px;
+      background: rgba(255, 107, 53, 0.2);
+      border: 2px solid #ff6b35;
+      color: #fff;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: all 0.3s;
+      font-size: 16px;
+      text-align: left;
+    }
+
+    .answer-option:hover:not(:disabled) {
+      background: rgba(255, 107, 53, 0.4);
+      transform: scale(1.02);
+      box-shadow: 0 0 15px rgba(255, 107, 53, 0.5);
+    }
+
+    .answer-option:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    #feedback {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 5px;
+      text-align: center;
+      font-size: 18px;
+      display: none;
+    }
+
+    #feedback.correct {
+      background: rgba(76, 175, 80, 0.3);
+      border: 2px solid #4caf50;
+      color: #4caf50;
+    }
+
+    #feedback.incorrect {
+      background: rgba(244, 67, 54, 0.3);
+      border: 2px solid #f44336;
+      color: #f44336;
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <h1>🎃 Jump Scare Demo</h1>
+    
+    <label>Select Creature:</label>
+    <select id="creature-select">
+      <option value="random">Random</option>
+    </select>
+
+    <button onclick="triggerJumpScare()">Trigger Jump Scare</button>
+    <button onclick="triggerWithQuestion()">Jump Scare + Question</button>
+    <button onclick="closeJumpScare()">Close Jump Scare</button>
+
+    <div class="info">
+      <strong>Features:</strong><br>
+      • Multiple ASCII art creatures<br>
+      • Sudden appearance animation<br>
+      • Question overlay<br>
+      • Answer validation<br>
+      • Feedback display
+    </div>
+  </div>
+
+  <div id="scare-container">
+    <div id="jumpscare-layer">
+      <pre id="creature-ascii"></pre>
+      <div id="question-container">
+        <h2 id="question-text"></h2>
+        <div id="answer-options"></div>
+        <div id="feedback"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="src/renderer/scare/creatures.js"></script>
+  <script src="src/renderer/scare/jumpscare.js"></script>
+  <script>
+    let jumpScare;
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', () => {
+      // Populate creature select
+      const select = document.getElementById('creature-select');
+      const names = window.creatures.getCreatureNames();
+      
+      names.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name.charAt(0).toUpperCase() + name.slice(1);
+        select.appendChild(option);
+      });
+
+      // Initialize jump scare
+      jumpScare = new JumpScare();
+      jumpScare.init();
+
+      console.log('Demo initialized');
+      console.log('Available creatures:', names);
+    });
+
+    function triggerJumpScare() {
+      const select = document.getElementById('creature-select');
+      const selectedName = select.value;
+
+      let creature;
+      if (selectedName === 'random') {
+        creature = window.creatures.getRandomCreature();
+      } else {
+        creature = window.creatures.getCreatureByName(selectedName);
+      }
+
+      console.log('Triggering jump scare with creature:', creature.name);
+      jumpScare.trigger({ creature });
+    }
+
+    function triggerWithQuestion() {
+      const select = document.getElementById('creature-select');
+      const selectedName = select.value;
+
+      let creature;
+      if (selectedName === 'random') {
+        creature = window.creatures.getRandomCreature();
+      } else {
+        creature = window.creatures.getCreatureByName(selectedName);
+      }
+
+      const sampleQuestions = [
+        {
+          id: 'q1',
+          text: 'What is the primary function of mitochondria?',
+          options: [
+            'Energy production',
+            'Protein synthesis',
+            'DNA replication',
+            'Cell division'
+          ],
+          correctAnswer: 0,
+          explanation: 'Mitochondria are the powerhouse of the cell, responsible for producing ATP through cellular respiration.'
+        },
+        {
+          id: 'q2',
+          text: 'Which planet is known as the Red Planet?',
+          options: [
+            'Venus',
+            'Mars',
+            'Jupiter',
+            'Saturn'
+          ],
+          correctAnswer: 1,
+          explanation: 'Mars is called the Red Planet due to iron oxide (rust) on its surface.'
+        },
+        {
+          id: 'q3',
+          text: 'What is the capital of France?',
+          options: [
+            'London',
+            'Berlin',
+            'Paris',
+            'Madrid'
+          ],
+          correctAnswer: 2,
+          explanation: 'Paris is the capital and largest city of France.'
+        }
+      ];
+
+      const question = sampleQuestions[Math.floor(Math.random() * sampleQuestions.length)];
+
+      console.log('Triggering jump scare with question:', question.text);
+      jumpScare.trigger({ creature, question });
+    }
+
+    function closeJumpScare() {
+      console.log('Closing jump scare');
+      jumpScare.close();
+    }
+
+    // Set up callback for when jump scare completes
+    window.onJumpScareComplete = () => {
+      console.log('Jump scare sequence completed!');
+    };
+  </script>
+</body>
+</html>

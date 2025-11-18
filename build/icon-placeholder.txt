@@ -1,0 +1,24 @@
+ICON PLACEHOLDER
+
+For production builds, replace this with a proper icon.ico file.
+
+The icon should include the following sizes:
+- 16x16
+- 24x24
+- 32x32
+- 48x48
+- 64x64
+- 128x128
+- 256x256
+
+You can create an .ico file using:
+1. Online tools like favicon.io or icoconvert.com
+2. GIMP (export as .ico with multiple sizes)
+3. ImageMagick: convert icon.png -define icon:auto-resize=256,128,64,48,32,16 icon.ico
+
+For now, a simple Halloween-themed icon with:
+- Pumpkin or ghost silhouette
+- Dark background (black or dark purple)
+- Orange/white accent colors
+
+Place the final icon.ico file in this build/ directory.

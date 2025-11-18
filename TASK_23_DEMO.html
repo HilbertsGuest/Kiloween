@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task 23 - Tunnel Animation Demo</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #000;
+      font-family: 'Courier New', monospace;
+    }
+
+    #demo-container {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #controls {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 20px;
+      border-radius: 10px;
+      color: #fff;
+    }
+
+    #controls button {
+      background: #ff6b35;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+      border-radius: 5px;
+      font-family: 'Courier New', monospace;
+    }
+
+    #controls button:hover {
+      background: #ffa500;
+    }
+
+    #status {
+      margin-top: 10px;
+      padding: 10px;
+      background: rgba(74, 14, 78, 0.5);
+      border-radius: 5px;
+    }
+
+    #tunnel-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .info {
+      color: #ffa500;
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="demo-container">
+    <div id="controls">
+      <h2 style="margin-top: 0;">Task 23: Tunnel Animation Demo</h2>
+      <button id="startBtn">Start Tunnel Animation</button>
+      <button id="stopBtn">Stop Animation</button>
+      <button id="resetBtn">Reset</button>
+      
+      <div id="status">
+        <div class="info">Status: <span id="statusText">Ready</span></div>
+        <div class="info">Click Count: <span id="clickCount">0</span></div>
+        <div class="info">Depth: <span id="depthText">0</span></div>
+        <div class="info">Is Paused: <span id="pausedText">No</span></div>
+      </div>
+
+      <div style="margin-top: 15px; font-size: 12px; color: #aaa;">
+        <strong>Instructions:</strong><br>
+        1. Click "Start Tunnel Animation"<br>
+        2. Click anywhere on the tunnel to start forward movement<br>
+        3. After animation pauses, click again to continue<br>
+        4. Watch the tunnel complete and trigger callback<br>
+        <br>
+        <strong>Requirements Tested:</strong><br>
+        ✓ 5.1: Display tunnel animation with forward movement<br>
+        ✓ 5.2: Animate for 2-3 seconds on first click<br>
+        ✓ 5.5: Use Halloween color scheme (dark purples, oranges)
+      </div>
+    </div>
+
+    <canvas id="tunnel-canvas"></canvas>
+  </div>
+
+  <script src="src/renderer/scare/tunnel.js"></script>
+  <script>
+    // Demo controls
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const statusText = document.getElementById('statusText');
+    const clickCountText = document.getElementById('clickCount');
+    const depthText = document.getElementById('depthText');
+    const pausedText = document.getElementById('pausedText');
+
+    let tunnel = null;
+    let updateInterval = null;
+
+    // Wait for tunnel animation to be initialized
+    setTimeout(() => {
+      tunnel = window.tunnelAnimation;
+      
+      if (!tunnel) {
+        statusText.textContent = 'Error: Tunnel not initialized';
+        statusText.style.color = '#f44336';
+        return;
+      }
+
+      // Set up completion callback
+      window.onTunnelComplete = () => {
+        statusText.textContent = 'Tunnel Complete!';
+        statusText.style.color = '#4caf50';
+        clearInterval(updateInterval);
+      };
+
+      // Start button
+      startBtn.addEventListener('click', () => {
+        tunnel.start();
+        statusText.textContent = 'Animating - Click on tunnel!';
+        statusText.style.color = '#ffa500';
+        
+        // Update status periodically
+        updateInterval = setInterval(() => {
+          if (tunnel) {
+            clickCountText.textContent = tunnel.clickCount || 0;
+            depthText.textContent = (tunnel.depth || 0).toFixed(2);
+            pausedText.textContent = tunnel.isPaused ? 'Yes' : 'No';
+          }
+        }, 100);
+      });
+
+      // Stop button
+      stopBtn.addEventListener('click', () => {
+        if (tunnel) {
+          tunnel.stop();
+          statusText.textContent = 'Stopped';
+          statusText.style.color = '#f44336';
+          clearInterval(updateInterval);
+        }
+      });
+
+      // Reset button
+      resetBtn.addEventListener('click', () => {
+        if (tunnel) {
+          tunnel.stop();
+          tunnel.depth = 0;
+          tunnel.clickCount = 0;
+          tunnel.isPaused = false;
+          statusText.textContent = 'Ready';
+          statusText.style.color = '#fff';
+          clickCountText.textContent = '0';
+          depthText.textContent = '0';
+          pausedText.textContent = 'No';
+          clearInterval(updateInterval);
+          
+          // Hide canvas
+          document.getElementById('tunnel-canvas').style.display = 'none';
+        }
+      });
+
+      statusText.textContent = 'Ready - Click Start!';
+      statusText.style.color = '#4caf50';
+    }, 100);
+  </script>
+</body>
+</html>

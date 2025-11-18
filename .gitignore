@@ -1,0 +1,6 @@
+node_modules/
+dist/
+*.log
+config.json
+questions.json
+session.json

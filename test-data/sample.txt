@@ -1,0 +1,15 @@
+Chemistry Notes - Atomic Structure
+
+An atom is the smallest unit of matter that retains the properties of an element.
+
+Atomic Components:
+- Protons: Positively charged particles in the nucleus
+- Neutrons: Neutral particles in the nucleus
+- Electrons: Negatively charged particles orbiting the nucleus
+
+Atomic Number: The number of protons in an atom's nucleus
+Mass Number: The sum of protons and neutrons
+
+Isotopes are atoms of the same element with different numbers of neutrons.
+
+Example: Carbon-12 and Carbon-14 are isotopes of carbon.

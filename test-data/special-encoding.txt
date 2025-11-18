@@ -1,0 +1,9 @@
+Special Characters Test
+
+This file contains special characters: café, naïve, résumé
+
+Mathematical symbols: α β γ δ ε
+
+Currency: € £ ¥ ₹
+
+Quotes: "Hello" 'World'

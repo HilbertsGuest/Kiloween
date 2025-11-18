@@ -1,0 +1,10 @@
+PLACEHOLDER ICON FILE
+
+This is a placeholder. For production builds, replace this with a proper .ico file.
+
+See build/README.md for instructions on creating a proper icon.
+
+The icon should be a multi-resolution .ico file with sizes:
+16x16, 24x24, 32x32, 48x48, 64x64, 128x128, 256x256
+
+For now, this placeholder allows the build configuration to be tested.

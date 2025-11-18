@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task 21 - Screen Shake Effect Demo</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #1a1a1a;
+      font-family: 'Courier New', monospace;
+      color: #fff;
+    }
+
+    #demo-container {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #shake-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      display: none;
+      pointer-events: none;
+    }
+
+    /* Progressive shake animations with increasing intensity */
+    @keyframes shake-subtle {
+      0%, 100% { transform: translate(0, 0); }
+      10% { transform: translate(-1px, 1px); }
+      20% { transform: translate(1px, -1px); }
+      30% { transform: translate(-1px, -1px); }
+      40% { transform: translate(1px, 1px); }
+      50% { transform: translate(-1px, 1px); }
+      60% { transform: translate(1px, -1px); }
+      70% { transform: translate(-1px, -1px); }
+      80% { transform: translate(1px, 1px); }
+      90% { transform: translate(-1px, 1px); }
+    }
+
+    @keyframes shake-light {
+      0%, 100% { transform: translate(0, 0); }
+      10% { transform: translate(-2px, 2px); }
+      20% { transform: translate(2px, -2px); }
+      30% { transform: translate(-2px, -2px); }
+      40% { transform: translate(2px, 2px); }
+      50% { transform: translate(-2px, 2px); }
+      60% { transform: translate(2px, -2px); }
+      70% { transform: translate(-2px, -2px); }
+      80% { transform: translate(2px, 2px); }
+      90% { transform: translate(-2px, 2px); }
+    }
+
+    @keyframes shake-medium {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      10% { transform: translate(-4px, 4px) rotate(-0.5deg); }
+      20% { transform: translate(4px, -4px) rotate(0.5deg); }
+      30% { transform: translate(-4px, -4px) rotate(-0.5deg); }
+      40% { transform: translate(4px, 4px) rotate(0.5deg); }
+      50% { transform: translate(-4px, 4px) rotate(-0.5deg); }
+      60% { transform: translate(4px, -4px) rotate(0.5deg); }
+      70% { transform: translate(-4px, -4px) rotate(-0.5deg); }
+      80% { transform: translate(4px, 4px) rotate(0.5deg); }
+      90% { transform: translate(-4px, 4px) rotate(-0.5deg); }
+    }
+
+    @keyframes shake-strong {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      10% { transform: translate(-8px, 8px) rotate(-1deg); }
+      20% { transform: translate(8px, -8px) rotate(1deg); }
+      30% { transform: translate(-8px, -8px) rotate(-1deg); }
+      40% { transform: translate(8px, 8px) rotate(1deg); }
+      50% { transform: translate(-8px, 8px) rotate(-1deg); }
+      60% { transform: translate(8px, -8px) rotate(1deg); }
+      70% { transform: translate(-8px, -8px) rotate(-1deg); }
+      80% { transform: translate(8px, 8px) rotate(1deg); }
+      90% { transform: translate(-8px, 8px) rotate(-1deg); }
+    }
+
+    @keyframes shake-intense {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      10% { transform: translate(-12px, 12px) rotate(-2deg); }
+      20% { transform: translate(12px, -12px) rotate(2deg); }
+      30% { transform: translate(-12px, -12px) rotate(-2deg); }
+      40% { transform: translate(12px, 12px) rotate(2deg); }
+      50% { transform: translate(-12px, 12px) rotate(-2deg); }
+      60% { transform: translate(12px, -12px) rotate(2deg); }
+      70% { transform: translate(-12px, -12px) rotate(-2deg); }
+      80% { transform: translate(12px, 12px) rotate(2deg); }
+      90% { transform: translate(-12px, 12px) rotate(-2deg); }
+    }
+
+    #shake-layer.shake-subtle {
+      animation: shake-subtle 0.1s infinite;
+    }
+
+    #shake-layer.shake-light {
+      animation: shake-light 0.1s infinite;
+    }
+
+    #shake-layer.shake-medium {
+      animation: shake-medium 0.08s infinite;
+    }
+
+    #shake-layer.shake-strong {
+      animation: shake-strong 0.06s infinite;
+    }
+
+    #shake-layer.shake-intense {
+      animation: shake-intense 0.05s infinite;
+    }
+
+    #content {
+      text-align: center;
+      z-index: 10;
+    }
+
+    h1 {
+      color: #ff6b35;
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      background: #ff6b35;
+      color: #fff;
+      border: none;
+      padding: 15px 30px;
+      font-size: 18px;
+      font-family: 'Courier New', monospace;
+      cursor: pointer;
+      border-radius: 5px;
+      margin: 10px;
+      transition: all 0.3s;
+    }
+
+    button:hover {
+      background: #ff8c5a;
+      transform: scale(1.05);
+    }
+
+    button:disabled {
+      background: #666;
+      cursor: not-allowed;
+      transform: scale(1);
+    }
+
+    #status {
+      margin-top: 20px;
+      font-size: 20px;
+      color: #ffa500;
+      min-height: 30px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin: 20px;
+      max-width: 800px;
+    }
+
+    .grid-item {
+      background: #2a2a2a;
+      padding: 20px;
+      border-radius: 10px;
+      border: 2px solid #ff6b35;
+    }
+  </style>
+</head>
+<body>
+  <div id="demo-container">
+    <div id="shake-layer">
+      <!-- This layer will shake the entire screen -->
+      <div id="content">
+        <h1>🎃 Screen Shake Effect Demo 🎃</h1>
+        <p>Task 21: Progressive Screen Shake Implementation</p>
+        
+        <div>
+          <button id="startBtn" onclick="startShake()">Start Shake Sequence</button>
+          <button id="resetBtn" onclick="resetDemo()" disabled>Reset</button>
+        </div>
+        
+        <div id="status"></div>
+        
+        <div class="grid">
+          <div class="grid-item">
+            <h3>Subtle</h3>
+            <p>±1px</p>
+          </div>
+          <div class="grid-item">
+            <h3>Light</h3>
+            <p>±2px</p>
+          </div>
+          <div class="grid-item">
+            <h3>Medium</h3>
+            <p>±4px + rotation</p>
+          </div>
+          <div class="grid-item">
+            <h3>Strong</h3>
+            <p>±8px + rotation</p>
+          </div>
+        </div>
+        
+        <p style="margin-top: 20px; color: #888;">
+          Total Duration: 5 seconds (600ms + 800ms + 1000ms + 1200ms + 1400ms)
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const shakeLayer = document.getElementById('shake-layer');
+    const status = document.getElementById('status');
+    const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    function startShake() {
+      console.log('Starting shake sequence');
+      
+      // Disable start button
+      startBtn.disabled = true;
+      
+      // Show shake layer
+      shakeLayer.style.display = 'block';
+      
+      // Progressive shake intensity levels
+      const shakeProgression = [
+        { className: 'shake-subtle', duration: 600, label: 'Subtle shake...' },
+        { className: 'shake-light', duration: 800, label: 'Light shake...' },
+        { className: 'shake-medium', duration: 1000, label: 'Medium shake...' },
+        { className: 'shake-strong', duration: 1200, label: 'Strong shake...' },
+        { className: 'shake-intense', duration: 1400, label: 'INTENSE SHAKE!' }
+      ];
+      
+      let currentLevel = 0;
+      
+      // Apply first shake level
+      applyShakeLevel(shakeProgression[currentLevel].className, shakeProgression[currentLevel].label);
+      
+      // Function to schedule next shake level
+      const scheduleNextLevel = () => {
+        const currentDuration = shakeProgression[currentLevel].duration;
+        
+        setTimeout(() => {
+          currentLevel++;
+          
+          if (currentLevel < shakeProgression.length) {
+            // Apply next shake level
+            applyShakeLevel(shakeProgression[currentLevel].className, shakeProgression[currentLevel].label);
+            scheduleNextLevel();
+          } else {
+            // Shake complete
+            stopShake();
+          }
+        }, currentDuration);
+      };
+      
+      // Start the progression
+      scheduleNextLevel();
+    }
+
+    function applyShakeLevel(className, label) {
+      // Remove all shake classes
+      shakeLayer.classList.remove('shake-subtle', 'shake-light', 'shake-medium', 'shake-strong', 'shake-intense');
+      
+      // Apply new shake class
+      shakeLayer.classList.add(className);
+      
+      // Update status
+      status.textContent = label;
+      
+      console.log(`Shake level: ${className}`);
+    }
+
+    function stopShake() {
+      // Remove all shake classes
+      shakeLayer.classList.remove('shake-subtle', 'shake-light', 'shake-medium', 'shake-strong', 'shake-intense');
+      
+      // Update status
+      status.textContent = '✅ Shake sequence complete!';
+      
+      // Enable reset button
+      resetBtn.disabled = false;
+      
+      console.log('Shake sequence complete');
+    }
+
+    function resetDemo() {
+      shakeLayer.style.display = 'none';
+      status.textContent = '';
+      startBtn.disabled = false;
+      resetBtn.disabled = true;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spooky Study App - Scare</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="scare-container">
+    <!-- Shake layer -->
+    <div id="shake-layer"></div>
+    
+    <!-- Dark overlay -->
+    <div id="dark-overlay">
+      <div id="click-prompt">Click to continue...</div>
+    </div>
+    
+    <!-- Tunnel animation -->
+    <canvas id="tunnel-canvas"></canvas>
+    
+    <!-- Jump scare layer -->
+    <div id="jumpscare-layer">
+      <pre id="creature-ascii"></pre>
+      <div id="question-container">
+        <h2 id="question-text"></h2>
+        <div id="answer-options"></div>
+        <div id="feedback"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="audio.js"></script>
+  <script src="creatures.js"></script>
+  <script src="jumpscare.js"></script>
+  <script src="renderer.js"></script>
+  <script src="tunnel.js"></script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<svg width="256" height="256" xmlns="http://www.w3.org/2000/svg">
+  <!-- Dark purple background -->
+  <rect width="256" height="256" fill="#2d1b4e"/>
+  
+  <!-- Spooky book with glow -->
+  <defs>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Book -->
+  <rect x="64" y="80" width="128" height="96" fill="#ff6b35" rx="4"/>
+  <rect x="68" y="84" width="120" height="88" fill="#ff8c42" rx="2"/>
+  
+  <!-- Book spine -->
+  <rect x="124" y="80" width="8" height="96" fill="#d84315"/>
+  
+  <!-- Pages -->
+  <line x1="80" y1="100" x2="116" y2="100" stroke="#2d1b4e" stroke-width="2"/>
+  <line x1="80" y1="115" x2="116" y2="115" stroke="#2d1b4e" stroke-width="2"/>
+  <line x1="80" y1="130" x2="116" y2="130" stroke="#2d1b4e" stroke-width="2"/>
+  <line x1="140" y1="100" x2="176" y2="100" stroke="#2d1b4e" stroke-width="2"/>
+  <line x1="140" y1="115" x2="176" y2="115" stroke="#2d1b4e" stroke-width="2"/>
+  <line x1="140" y1="130" x2="176" y2="130" stroke="#2d1b4e" stroke-width="2"/>
+  
+  <!-- Spooky eyes above book -->
+  <circle cx="100" cy="50" r="12" fill="#fff" filter="url(#glow)"/>
+  <circle cx="156" cy="50" r="12" fill="#fff" filter="url(#glow)"/>
+  <circle cx="100" cy="50" r="6" fill="#2d1b4e"/>
+  <circle cx="156" cy="50" r="6" fill="#2d1b4e"/>
+  
+  <!-- Question mark on book -->
+  <text x="128" y="145" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#2d1b4e" text-anchor="middle">?</text>
+</svg>

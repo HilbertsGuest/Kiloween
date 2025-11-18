@@ -1,0 +1,96 @@
+{
+  "name": "spooky-study-app",
+  "version": "1.0.0",
+  "description": "Halloween-themed desktop app that helps students stay productive by interrupting procrastination with educational content",
+  "main": "src/main/index.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "test": "vitest --run",
+    "test:watch": "vitest",
+    "test:unit": "vitest --run",
+    "verify": "node scripts/verify-build.js",
+    "prebuild": "node scripts/verify-build.js --skip-tests",
+    "build": "electron-builder",
+    "postbuild": "node scripts/test-installation.js",
+    "package": "electron-builder --dir",
+    "dist": "electron-builder",
+    "test:install": "node scripts/test-installation.js"
+  },
+  "keywords": [
+    "electron",
+    "education",
+    "productivity",
+    "halloween"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "archiver": "^7.0.1",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "jsdom": "^27.2.0",
+    "pdf-lib": "^1.17.1",
+    "pdfkit": "^0.17.2",
+    "vitest": "^4.0.9"
+  },
+  "dependencies": {
+    "electron-updater": "^6.6.2",
+    "mammoth": "^1.6.0",
+    "markdown-it": "^14.0.0",
+    "pdf-parse": "^1.1.1"
+  },
+  "build": {
+    "appId": "com.spookystudy.app",
+    "productName": "Spooky Study App",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "data/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "${productName}-${version}-${arch}.${ext}",
+      "publisherName": "Spooky Study App",
+      "verifyUpdateCodeSignature": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Spooky Study App",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "deleteAppDataOnUninstall": true,
+      "runAfterFinish": true
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-portable.${ext}"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "spooky-study-app",
+      "repo": "spooky-study-app"
+    }
+  }
+}

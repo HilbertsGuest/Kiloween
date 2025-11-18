@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spooky Study App - Configuration</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>🎃 Spooky Study App Configuration 👻</h1>
+      <p class="subtitle">Configure your spooky study experience</p>
+    </header>
+
+    <main>
+      <!-- Interval Settings -->
+      <section class="config-section">
+        <h2>⏰ Scare Interval</h2>
+        <p class="description">How often should the spooky interruption occur?</p>
+
+        <div class="slider-container">
+          <input type="range" id="interval-slider" min="5" max="120" value="30" class="slider">
+          <div class="slider-value">
+            <span id="interval-value">30</span> minutes
+          </div>
+        </div>
+      </section>
+
+      <!-- Audio Settings -->
+      <section class="config-section">
+        <h2>🔊 Audio Settings</h2>
+        <p class="description">Enable or disable jump scare sound effects</p>
+
+        <div class="toggle-container">
+          <label class="toggle-switch">
+            <input type="checkbox" id="audio-toggle" checked>
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-label" id="audio-label">Audio Enabled</span>
+        </div>
+      </section>
+
+      <!-- Difficulty Settings -->
+      <section class="config-section">
+        <h2>🎯 Question Difficulty</h2>
+        <p class="description">Choose the difficulty level for questions</p>
+
+        <div class="dropdown-container">
+          <select id="difficulty-dropdown" class="dropdown">
+            <option value="easy">Easy - Simple recall questions</option>
+            <option value="medium" selected>Medium - Understanding questions</option>
+            <option value="hard">Hard - Complex analysis questions</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- Session Statistics -->
+      <section class="config-section">
+        <h2>📊 Session Statistics</h2>
+        <p class="description">Your learning progress in this session</p>
+
+        <div class="stats-container">
+          <div class="stat-card">
+            <div class="stat-value" id="stat-questions">0</div>
+            <div class="stat-label">Questions Answered</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-correct">0</div>
+            <div class="stat-label">Correct Answers</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-accuracy">0%</div>
+            <div class="stat-label">Accuracy</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-streak">0</div>
+            <div class="stat-label">Current Streak</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-best-streak">0</div>
+            <div class="stat-label">Best Streak</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-duration">0m</div>
+            <div class="stat-label">Session Duration</div>
+          </div>
+        </div>
+
+        <button id="reset-session-btn" class="reset-session-btn">Reset Session Statistics</button>
+      </section>
+
+      <!-- Document Management -->
+      <section class="config-section">
+        <h2>📚 Study Documents</h2>
+        <p class="description">Add documents for question generation (PDF, DOCX, MD, TXT)</p>
+
+        <div class="document-management">
+          <!-- Add Document Button -->
+          <button id="add-document-btn" class="add-document-btn">
+            <span class="btn-icon">📄</span>
+            <span class="btn-text">Add Document</span>
+          </button>
+
+          <!-- Drag and Drop Zone -->
+          <div id="drop-zone" class="drop-zone">
+            <div class="drop-zone-content">
+              <span class="drop-icon">📁</span>
+              <p class="drop-text">Drag and drop documents here</p>
+              <p class="drop-hint">or click "Add Document" button above</p>
+            </div>
+          </div>
+
+          <!-- Document List -->
+          <div id="document-list" class="document-list">
+            <!-- Documents will be added here dynamically -->
+          </div>
+
+          <!-- Empty State -->
+          <div id="empty-state" class="empty-state">
+            <span class="empty-icon">📚</span>
+            <p class="empty-text">No documents added yet</p>
+            <p class="empty-hint">Add study materials to generate questions</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <button id="save-button" class="save-button">Save Configuration</button>
+      <div id="status-message" class="status-message"></div>
+    </footer>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+
+</html>

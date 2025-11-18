@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task 24 Demo - Tunnel Pause and Second Click</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #000;
+      font-family: 'Courier New', monospace;
+    }
+
+    #tunnel-canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #info {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      color: #fff;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 15px;
+      border-radius: 5px;
+      font-size: 14px;
+      z-index: 1000;
+    }
+
+    #info h3 {
+      margin: 0 0 10px 0;
+      color: #ff6b35;
+    }
+
+    #info p {
+      margin: 5px 0;
+    }
+
+    #info .status {
+      color: #4a0e4e;
+      font-weight: bold;
+    }
+
+    #info .highlight {
+      color: #ffa500;
+    }
+
+    #start-btn {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 20px 40px;
+      font-size: 24px;
+      font-family: 'Courier New', monospace;
+      background: #ff6b35;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      z-index: 1000;
+    }
+
+    #start-btn:hover {
+      background: #ffa500;
+    }
+  </style>
+</head>
+<body>
+  <div id="info">
+    <h3>Task 24: Tunnel Pause & Second Click Demo</h3>
+    <p><strong>Status:</strong> <span id="status" class="status">Ready</span></p>
+    <p><strong>Click Count:</strong> <span id="click-count" class="highlight">0</span></p>
+    <p><strong>Is Paused:</strong> <span id="is-paused" class="highlight">false</span></p>
+    <p><strong>Depth:</strong> <span id="depth" class="highlight">0</span></p>
+    <hr>
+    <p><strong>Instructions:</strong></p>
+    <p>1. Click "Start Tunnel" button</p>
+    <p>2. Click once to start forward movement (2.5s)</p>
+    <p>3. Wait for pause and "Click to continue..." prompt</p>
+    <p>4. Click again to accelerate to jump scare</p>
+  </div>
+
+  <button id="start-btn">Start Tunnel Animation</button>
+  <canvas id="tunnel-canvas"></canvas>
+
+  <script>
+    // Tunnel animation class (simplified from tunnel.js)
+    class TunnelAnimation {
+      constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.isAnimating = false;
+        this.isPaused = false;
+        this.animationFrame = null;
+        this.depth = 0;
+        this.maxDepth = 100;
+        this.speed = 0;
+        this.clickCount = 0;
+        
+        this.colors = {
+          primary: '#4a0e4e',
+          secondary: '#ff6b35',
+          accent: '#2d1b2e',
+          highlight: '#ffa500'
+        };
+        
+        this.resizeCanvas();
+        window.addEventListener('resize', () => this.resizeCanvas());
+      }
+      
+      resizeCanvas() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this.centerX = this.canvas.width / 2;
+        this.centerY = this.canvas.height / 2;
+      }
+      
+      start() {
+        console.log('Starting tunnel animation');
+        this.isAnimating = true;
+        this.isPaused = false;
+        this.depth = 0;
+        this.speed = 0;
+        this.clickCount = 0;
+        
+        this.drawTunnel();
+        this.canvas.addEventListener('click', this.handleClick.bind(this));
+        this.updateInfo();
+      }
+      
+      handleClick() {
+        if (!this.isAnimating) return;
+        
+        this.clickCount++;
+        console.log(`Tunnel click ${this.clickCount}`);
+        this.updateInfo();
+        
+        if (this.clickCount === 1) {
+          this.startForwardMovement();
+        } else if (this.clickCount === 2 && this.isPaused) {
+          this.continueToJumpScare();
+        }
+      }
+      
+      startForwardMovement() {
+        console.log('Starting forward movement');
+        document.getElementById('status').textContent = 'Moving Forward...';
+        this.isPaused = false;
+        this.speed = 1.5;
+        
+        const startTime = Date.now();
+        const duration = 2500;
+        
+        const animate = () => {
+          if (!this.isAnimating || this.isPaused) return;
+          
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          
+          this.depth = progress * 50;
+          this.speed = 1.5 + (progress * 2);
+          
+          this.drawTunnel();
+          this.updateInfo();
+          
+          if (progress < 1) {
+            this.animationFrame = requestAnimationFrame(animate);
+          } else {
+            this.pauseForSecondClick();
+          }
+        };
+        
+        animate();
+      }
+      
+      pauseForSecondClick() {
+        console.log('Tunnel paused - waiting for second click');
+        document.getElementById('status').textContent = 'PAUSED - Click to Continue';
+        this.isPaused = true;
+        this.drawClickPrompt();
+        this.updateInfo();
+      }
+      
+      continueToJumpScare() {
+        console.log('Continuing to jump scare');
+        document.getElementById('status').textContent = 'Accelerating to Jump Scare!';
+        this.isPaused = false;
+        
+        const startDepth = this.depth;
+        const startTime = Date.now();
+        const duration = 1500;
+        
+        const animate = () => {
+          if (!this.isAnimating) return;
+          
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          
+          this.depth = startDepth + ((this.maxDepth - startDepth) * progress);
+          this.speed = 3 + (progress * 5);
+          
+          this.drawTunnel();
+          this.updateInfo();
+          
+          if (progress < 1) {
+            this.animationFrame = requestAnimationFrame(animate);
+          } else {
+            this.stop();
+            this.triggerJumpScare();
+          }
+        };
+        
+        animate();
+      }
+      
+      drawTunnel() {
+        this.ctx.fillStyle = this.colors.accent;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        const numLayers = 20;
+        
+        for (let i = 0; i < numLayers; i++) {
+          const layerDepth = i + this.depth;
+          const scale = 1 - (layerDepth / this.maxDepth);
+          
+          if (scale <= 0) continue;
+          
+          const size = Math.max(this.canvas.width, this.canvas.height) * scale;
+          const x = this.centerX - (size / 2);
+          const y = this.centerY - (size / 2);
+          
+          const colorIndex = Math.floor(layerDepth) % 2;
+          this.ctx.fillStyle = colorIndex === 0 ? this.colors.primary : this.colors.secondary;
+          
+          const alpha = 0.7 + (scale * 0.3);
+          this.ctx.globalAlpha = alpha;
+          
+          this.ctx.fillRect(x, y, size, size);
+          
+          this.ctx.strokeStyle = this.colors.highlight;
+          this.ctx.lineWidth = 2 * scale;
+          this.ctx.globalAlpha = alpha * 0.5;
+          this.ctx.strokeRect(x, y, size, size);
+        }
+        
+        this.ctx.globalAlpha = 1;
+        this.drawVignette();
+      }
+      
+      drawVignette() {
+        const gradient = this.ctx.createRadialGradient(
+          this.centerX, this.centerY, this.canvas.width * 0.3,
+          this.centerX, this.centerY, this.canvas.width * 0.7
+        );
+        
+        gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.8)');
+        
+        this.ctx.fillStyle = gradient;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      }
+      
+      drawClickPrompt() {
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        this.ctx.font = '24px "Courier New", monospace';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        
+        const text = 'Click to continue...';
+        const textY = this.canvas.height - 50;
+        
+        this.ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+        this.ctx.shadowBlur = 10;
+        
+        this.ctx.fillText(text, this.centerX, textY);
+        
+        this.ctx.shadowBlur = 0;
+      }
+      
+      stop() {
+        console.log('Stopping tunnel animation');
+        this.isAnimating = false;
+        
+        if (this.animationFrame) {
+          cancelAnimationFrame(this.animationFrame);
+          this.animationFrame = null;
+        }
+        
+        this.canvas.removeEventListener('click', this.handleClick);
+      }
+      
+      triggerJumpScare() {
+        console.log('Tunnel complete - triggering jump scare');
+        document.getElementById('status').textContent = 'JUMP SCARE TRIGGERED!';
+        
+        // Show completion message
+        this.ctx.fillStyle = '#000';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        this.ctx.fillStyle = '#ff6b35';
+        this.ctx.font = '48px "Courier New", monospace';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText('JUMP SCARE!', this.centerX, this.centerY);
+        
+        this.ctx.fillStyle = '#fff';
+        this.ctx.font = '24px "Courier New", monospace';
+        this.ctx.fillText('Task 24 Complete', this.centerX, this.centerY + 60);
+        
+        setTimeout(() => {
+          document.getElementById('start-btn').style.display = 'block';
+        }, 2000);
+      }
+      
+      updateInfo() {
+        document.getElementById('click-count').textContent = this.clickCount;
+        document.getElementById('is-paused').textContent = this.isPaused;
+        document.getElementById('depth').textContent = this.depth.toFixed(2);
+      }
+    }
+
+    // Initialize
+    const canvas = document.getElementById('tunnel-canvas');
+    let tunnelAnimation = new TunnelAnimation(canvas);
+
+    document.getElementById('start-btn').addEventListener('click', () => {
+      document.getElementById('start-btn').style.display = 'none';
+      document.getElementById('status').textContent = 'Click canvas to start movement';
+      tunnelAnimation = new TunnelAnimation(canvas);
+      tunnelAnimation.start();
+    });
+  </script>
+</body>
+</html>
