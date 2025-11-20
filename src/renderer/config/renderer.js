@@ -312,19 +312,38 @@ function clearStatusMessage() {
 /**
  * Handle add document button click
  */
-function handleAddDocument() {
-  // Create a file input element
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.pdf,.docx,.md,.txt';
-  input.multiple = true;
-  
-  input.addEventListener('change', (event) => {
-    const files = Array.from(event.target.files);
-    addDocuments(files);
-  });
-  
-  input.click();
+async function handleAddDocument() {
+  console.log('Add document button clicked');
+  try {
+    // Check if electronAPI is available
+    if (!window.electronAPI || !window.electronAPI.selectDocuments) {
+      console.error('electronAPI.selectDocuments not available');
+      showStatusMessage('File dialog not available', 'error');
+      return;
+    }
+    
+    console.log('Calling selectDocuments...');
+    // Use Electron dialog API to select files
+    const result = await window.electronAPI.selectDocuments();
+    console.log('Dialog result:', result);
+    
+    if (result && result.filePaths && result.filePaths.length > 0) {
+      // Convert file paths to File-like objects
+      const files = result.filePaths.map(filePath => ({
+        path: filePath,
+        name: filePath.split(/[\\/]/).pop(), // Get filename from path
+        size: 0 // Size will be determined during validation
+      }));
+      
+      console.log('Adding files:', files);
+      addDocuments(files);
+    } else {
+      console.log('No files selected or dialog cancelled');
+    }
+  } catch (error) {
+    console.error('Error selecting documents:', error);
+    showStatusMessage('Failed to open file dialog: ' + error.message, 'error');
+  }
 }
 
 /**

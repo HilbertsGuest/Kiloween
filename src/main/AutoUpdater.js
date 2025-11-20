@@ -7,7 +7,6 @@
 
 const { autoUpdater } = require('electron-updater');
 const { app, dialog } = require('electron');
-const ErrorLogger = require('./ErrorLogger');
 
 class AutoUpdater {
   constructor() {
@@ -26,29 +25,29 @@ class AutoUpdater {
    */
   setupEventHandlers() {
     autoUpdater.on('checking-for-update', () => {
-      ErrorLogger.log('Checking for updates...');
+      console.log('Checking for updates...');
     });
 
     autoUpdater.on('update-available', (info) => {
-      ErrorLogger.log('Update available:', info.version);
+      console.log('Update available:', info.version);
       this.promptUserForUpdate(info);
     });
 
     autoUpdater.on('update-not-available', (info) => {
-      ErrorLogger.log('No updates available. Current version:', info.version);
+      console.log('No updates available. Current version:', info.version);
     });
 
     autoUpdater.on('error', (err) => {
-      ErrorLogger.log('Error in auto-updater:', err);
+      console.error('Error in auto-updater:', err);
     });
 
     autoUpdater.on('download-progress', (progressObj) => {
       const message = `Download speed: ${progressObj.bytesPerSecond} - Downloaded ${progressObj.percent}%`;
-      ErrorLogger.log(message);
+      console.log(message);
     });
 
     autoUpdater.on('update-downloaded', (info) => {
-      ErrorLogger.log('Update downloaded:', info.version);
+      console.log('Update downloaded:', info.version);
       this.promptUserToInstall(info);
     });
   }
@@ -59,7 +58,7 @@ class AutoUpdater {
   start() {
     // Don't check for updates in development
     if (process.env.NODE_ENV === 'development' || app.isPackaged === false) {
-      ErrorLogger.log('Auto-updater disabled in development mode');
+      console.log('Auto-updater disabled in development mode');
       return;
     }
 
@@ -91,7 +90,7 @@ class AutoUpdater {
     try {
       await autoUpdater.checkForUpdates();
     } catch (error) {
-      ErrorLogger.log('Failed to check for updates:', error);
+      console.error('Failed to check for updates:', error);
     }
   }
 

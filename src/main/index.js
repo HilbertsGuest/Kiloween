@@ -111,7 +111,7 @@ async function initializeApp() {
   // Set up timer expiration handler - connect to ScareController
   timerManager.on('expired', async () => {
     console.log('Timer expired! Triggering scare sequence...');
-    
+
     try {
       // Validate questions are still available
       const hasQuestions = questionGenerator.hasUnusedQuestions();
@@ -126,25 +126,25 @@ async function initializeApp() {
           return;
         }
       }
-      
+
       // Ensure scare window exists and is ready
       if (!scareWindow) {
         createScareWindow();
       }
-      
+
       // Wait for window to be ready
       if (scareWindow.webContents.isLoading()) {
         await new Promise(resolve => {
           scareWindow.webContents.once('did-finish-load', resolve);
         });
       }
-      
+
       // Set the scare window reference in ScareController
       scareController.setScareWindow(scareWindow);
-      
+
       // Show the window
       showScareWindow();
-      
+
       // Start the scare sequence
       await scareController.startSequence();
     } catch (error) {
@@ -159,7 +159,7 @@ async function initializeApp() {
   scareController.on('sequence-end', () => {
     console.log('Scare sequence ended normally');
     hideScareWindow();
-    
+
     // Reset and restart timer for next cycle
     timerManager.reset();
     timerManager.start();
@@ -168,7 +168,7 @@ async function initializeApp() {
   scareController.on('sequence-cancelled', () => {
     console.log('Scare sequence was cancelled');
     hideScareWindow();
-    
+
     // Reset and restart timer after cancellation
     timerManager.reset();
     timerManager.start();
@@ -177,17 +177,21 @@ async function initializeApp() {
   scareController.on('error', (error) => {
     console.error('ScareController error:', error);
     hideScareWindow();
-    
+
     // Reset and restart timer on error
     timerManager.reset();
     timerManager.start();
   });
 
+  // Set up IPC handlers FIRST (before creating any windows)
+  setupIPCHandlers();
+
   // Create system tray
   createTray();
 
-  // Set up IPC handlers
-  setupIPCHandlers();
+  // Auto-open configuration window on first launch (for easier access)
+  console.log('Opening configuration window...');
+  createConfigWindow();
 
   // Set up global error handlers
   process.on('uncaughtException', (error) => {
@@ -211,7 +215,7 @@ function setupIPCHandlers() {
       if (!configManager) {
         throw new Error('ConfigManager not initialized');
       }
-      
+
       if (key) {
         // Get specific config value
         return configManager.get(key);
@@ -230,44 +234,68 @@ function setupIPCHandlers() {
       if (!configManager) {
         throw new Error('ConfigManager not initialized');
       }
-      
+
       if (typeof key === 'object' && value === undefined) {
         // Setting entire config object
         const newConfig = key;
-        
+
         // Validate config structure
         validateConfig(newConfig);
-        
+
         // Update each key
         for (const [k, v] of Object.entries(newConfig)) {
           await configManager.set(k, v);
-          
+
           // Notify TimerManager of interval changes
           if (k === 'interval' && timerManager) {
             timerManager.onConfigChange(k, v);
           }
         }
-        
+
         // Notify all windows of config update
         notifyConfigUpdate();
-        
+
         return configManager.config;
       } else {
         // Setting single key-value pair
         await configManager.set(key, value);
-        
+
         // Notify TimerManager of interval changes
         if (key === 'interval' && timerManager) {
           timerManager.onConfigChange(key, value);
         }
-        
+
         // Notify all windows of config update
         notifyConfigUpdate();
-        
+
         return configManager.get(key);
       }
     } catch (error) {
       console.error('Error setting config:', error);
+      throw error;
+    }
+  });
+
+  // Dialog handler for selecting documents
+  ipcMain.handle('dialog:selectDocuments', async () => {
+    console.log('Dialog handler called - opening file dialog...');
+    const { dialog } = require('electron');
+    try {
+      const result = await dialog.showOpenDialog(configWindow, {
+        properties: ['openFile', 'multiSelections'],
+        filters: [
+          { name: 'Documents', extensions: ['pdf', 'docx', 'md', 'txt'] },
+          { name: 'PDF Files', extensions: ['pdf'] },
+          { name: 'Word Documents', extensions: ['docx'] },
+          { name: 'Markdown Files', extensions: ['md'] },
+          { name: 'Text Files', extensions: ['txt'] },
+          { name: 'All Files', extensions: ['*'] }
+        ]
+      });
+      console.log('Dialog result:', result);
+      return result;
+    } catch (error) {
+      console.error('Error showing dialog:', error);
       throw error;
     }
   });
@@ -278,12 +306,12 @@ function setupIPCHandlers() {
       if (!configManager) {
         throw new Error('ConfigManager not initialized');
       }
-      
+
       // Validate file path
       if (!filePath || typeof filePath !== 'string') {
         throw new Error('Invalid file path');
       }
-      
+
       // Validate document using DocumentProcessor
       if (documentProcessor) {
         const validation = await documentProcessor.validateDocument(filePath);
@@ -301,22 +329,22 @@ function setupIPCHandlers() {
           throw new Error(`File not found: ${filePath}`);
         }
       }
-      
+
       // Get current documents
       const documents = configManager.get('documents') || [];
-      
+
       // Check if document already exists
       if (documents.includes(filePath)) {
         throw new Error('Document already added');
       }
-      
+
       // Add document to list
       documents.push(filePath);
       await configManager.set('documents', documents);
-      
+
       // Notify all windows of config update
       notifyConfigUpdate();
-      
+
       return { success: true, filePath };
     } catch (error) {
       console.error('Error adding document:', error);
@@ -329,27 +357,27 @@ function setupIPCHandlers() {
       if (!configManager) {
         throw new Error('ConfigManager not initialized');
       }
-      
+
       // Validate file path
       if (!filePath || typeof filePath !== 'string') {
         throw new Error('Invalid file path');
       }
-      
+
       // Get current documents
       const documents = configManager.get('documents') || [];
-      
+
       // Remove document from list
       const index = documents.indexOf(filePath);
       if (index === -1) {
         throw new Error('Document not found in list');
       }
-      
+
       documents.splice(index, 1);
       await configManager.set('documents', documents);
-      
+
       // Notify all windows of config update
       notifyConfigUpdate();
-      
+
       return { success: true, filePath };
     } catch (error) {
       console.error('Error removing document:', error);
@@ -361,13 +389,13 @@ function setupIPCHandlers() {
     try {
       // Validate file path
       if (!filePath || typeof filePath !== 'string') {
-        return { 
-          valid: false, 
+        return {
+          valid: false,
           error: 'Invalid file path',
           userFriendlyError: 'Invalid file path provided'
         };
       }
-      
+
       // Use DocumentProcessor for validation if available
       if (documentProcessor) {
         const validation = await documentProcessor.validateDocument(filePath);
@@ -378,45 +406,45 @@ function setupIPCHandlers() {
           size: validation.metadata?.size
         };
       }
-      
+
       // Fallback validation
       const fs = require('fs').promises;
       try {
         const stats = await fs.stat(filePath);
-        
+
         // Check file size (max 50MB)
         const maxSize = 50 * 1024 * 1024;
         if (stats.size > maxSize) {
-          return { 
-            valid: false, 
+          return {
+            valid: false,
             error: 'File too large (max 50MB)',
             userFriendlyError: 'File is too large. Maximum size is 50MB.'
           };
         }
-        
+
         // Check file extension
         const { SUPPORTED_FORMATS } = require('../shared/constants');
         const ext = path.extname(filePath).toLowerCase();
         if (!SUPPORTED_FORMATS.includes(ext)) {
-          return { 
-            valid: false, 
+          return {
+            valid: false,
             error: 'Unsupported file format',
             userFriendlyError: 'Unsupported file type. Please use PDF, DOCX, MD, or TXT files.'
           };
         }
-        
+
         return { valid: true, size: stats.size };
       } catch (error) {
-        return { 
-          valid: false, 
+        return {
+          valid: false,
           error: 'File not found',
           userFriendlyError: 'File not found or cannot be accessed'
         };
       }
     } catch (error) {
       console.error('Error validating document:', error);
-      return { 
-        valid: false, 
+      return {
+        valid: false,
         error: error.message,
         userFriendlyError: 'An error occurred while validating the file'
       };
@@ -429,9 +457,9 @@ function setupIPCHandlers() {
       if (!configManager || !documentProcessor) {
         throw new Error('Required managers not initialized');
       }
-      
+
       const documents = configManager.get('documents') || [];
-      
+
       if (documents.length === 0) {
         return {
           valid: [],
@@ -439,14 +467,14 @@ function setupIPCHandlers() {
           removed: []
         };
       }
-      
+
       // Validate all documents
       const validationResults = await documentProcessor.validateDocuments(documents);
-      
+
       const validDocs = [];
       const invalidDocs = [];
       const removedDocs = [];
-      
+
       // Separate valid and invalid documents
       for (const [filePath, result] of validationResults.entries()) {
         if (result.valid) {
@@ -461,16 +489,16 @@ function setupIPCHandlers() {
           removedDocs.push(filePath);
         }
       }
-      
+
       // Remove invalid documents from config
       if (removedDocs.length > 0) {
         await configManager.set('documents', validDocs);
         console.log(`Removed ${removedDocs.length} invalid documents from configuration`);
-        
+
         // Notify all windows of config update
         notifyConfigUpdate();
       }
-      
+
       return {
         valid: validDocs,
         invalid: invalidDocs,
@@ -546,9 +574,9 @@ function setupIPCHandlers() {
           error: 'QuestionGenerator not initialized'
         };
       }
-      
+
       const stats = questionGenerator.getSessionStats();
-      
+
       return {
         hasQuestions: questionGenerator.hasQuestions(),
         hasUnusedQuestions: questionGenerator.hasUnusedQuestions(),
@@ -572,16 +600,16 @@ function setupIPCHandlers() {
   ipcMain.handle(IPC_CHANNELS.QUESTIONS_REGENERATE, async () => {
     try {
       const success = await regenerateQuestions();
-      
+
       if (!success) {
         return {
           success: false,
           error: 'Failed to generate questions. Please check your document configuration.'
         };
       }
-      
+
       const stats = questionGenerator.getSessionStats();
-      
+
       return {
         success: true,
         questionsGenerated: stats.totalQuestions,
@@ -599,10 +627,10 @@ function setupIPCHandlers() {
   // Scare window handlers - now handled by ScareController
   // The ScareController sets up its own IPC listeners when setScareWindow is called
   // We just need to ensure the handlers are registered
-  
+
   // Note: SCARE_STAGE_COMPLETE and ANSWER_SUBMIT are handled by ScareController
   // SCARE_CANCEL is also handled by ScareController
-  
+
   console.log('Scare window IPC handlers will be set up by ScareController');
 
   // Session statistics handlers
@@ -682,35 +710,35 @@ function setupIPCHandlers() {
  */
 function validateConfig(config) {
   const { DIFFICULTY_LEVELS, THEMES } = require('../shared/constants');
-  
+
   // Validate interval
   if (config.interval !== undefined) {
     if (typeof config.interval !== 'number' || config.interval < 5 || config.interval > 120) {
       throw new Error('Interval must be between 5 and 120 minutes');
     }
   }
-  
+
   // Validate audioEnabled
   if (config.audioEnabled !== undefined) {
     if (typeof config.audioEnabled !== 'boolean') {
       throw new Error('audioEnabled must be a boolean');
     }
   }
-  
+
   // Validate difficulty
   if (config.difficulty !== undefined) {
     if (!DIFFICULTY_LEVELS.includes(config.difficulty)) {
       throw new Error(`difficulty must be one of: ${DIFFICULTY_LEVELS.join(', ')}`);
     }
   }
-  
+
   // Validate theme
   if (config.theme !== undefined) {
     if (!THEMES.includes(config.theme)) {
       throw new Error(`theme must be one of: ${THEMES.join(', ')}`);
     }
   }
-  
+
   // Validate documents
   if (config.documents !== undefined) {
     if (!Array.isArray(config.documents)) {
@@ -730,9 +758,12 @@ function notifyConfigUpdate() {
 }
 
 function createTray() {
-  // Create system tray icon (placeholder path for now)
-  tray = new Tray(path.join(__dirname, '../renderer/assets/icon.png'));
-  
+  // Create system tray icon from build folder
+  const iconPath = path.join(__dirname, '../../build/icon.ico');
+  console.log('Creating tray icon from:', iconPath);
+  tray = new Tray(iconPath);
+  console.log('Tray icon created successfully');
+
   const contextMenu = Menu.buildFromTemplate([
     {
       label: 'Configuration',
@@ -745,18 +776,34 @@ function createTray() {
       }
     },
     {
+      label: 'Test Scare Sequence',
+      click: () => {
+        console.log('Manually triggering scare sequence...');
+        if (scareController) {
+          scareController.startSequence();
+        } else {
+          console.error('ScareController not initialized');
+        }
+      }
+    },
+    {
+      type: 'separator'
+    },
+    {
       label: 'Exit',
       click: () => {
         app.quit();
       }
     }
   ]);
-  
+
   tray.setToolTip('Spooky Study App');
   tray.setContextMenu(contextMenu);
 }
 
 function createConfigWindow() {
+  console.log('Creating config window...');
+
   configWindow = new BrowserWindow({
     width: 800,
     height: 600,
@@ -764,18 +811,26 @@ function createConfigWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, '../renderer/config/preload.js')
-    },
-    show: false
+    }
+    // Removed show: false to make window visible immediately
   });
 
-  configWindow.loadFile(path.join(__dirname, '../renderer/config/index.html'));
+  const htmlPath = path.join(__dirname, '../renderer/config/index.html');
+  console.log('Loading config HTML from:', htmlPath);
 
-  configWindow.once('ready-to-show', () => {
-    configWindow.show();
+  configWindow.loadFile(htmlPath).catch(err => {
+    console.error('Failed to load config window:', err);
   });
 
   configWindow.on('closed', () => {
+    console.log('Config window closed');
     configWindow = null;
+    // For development: quit app when config window closes
+    // In production, the app should continue running in tray
+    if (process.env.NODE_ENV === 'development' || !app.isPackaged) {
+      console.log('Development mode: quitting app');
+      app.quit();
+    }
   });
 }
 
@@ -816,7 +871,7 @@ function createScareWindow() {
 
   // Set window to be always on top of all other windows
   scareWindow.setAlwaysOnTop(true, 'screen-saver');
-  
+
   // Prevent window from being hidden by other windows
   scareWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
@@ -835,7 +890,7 @@ function showScareWindow() {
   if (!scareWindow) {
     createScareWindow();
   }
-  
+
   // Wait for window to be ready before showing
   if (scareWindow.webContents.isLoading()) {
     scareWindow.webContents.once('did-finish-load', () => {
@@ -891,9 +946,9 @@ app.on('before-quit', async (event) => {
   if (!isQuitting) {
     event.preventDefault();
     isQuitting = true;
-    
+
     console.log('Spooky Study App shutting down...');
-    
+
     try {
       // Stop resource monitoring
       if (resourceMonitor) {
@@ -908,7 +963,7 @@ app.on('before-quit', async (event) => {
         scareController.destroy();
         scareController = null;
       }
-      
+
       // Stop and save timer state
       if (timerManager) {
         timerManager.stop();
@@ -916,7 +971,7 @@ app.on('before-quit', async (event) => {
         timerManager.destroy();
         timerManager = null;
       }
-      
+
       // Clear question cache from memory
       if (questionGenerator) {
         questionGenerator.clearMemoryCache();
@@ -924,21 +979,21 @@ app.on('before-quit', async (event) => {
 
       // Save session state
       await saveSessionState();
-      
+
       // Clean up resources
       if (tray) {
         tray.destroy();
         tray = null;
       }
-      
+
       // Close all windows
       if (configWindow) {
         configWindow.destroy();
         configWindow = null;
       }
-      
+
       destroyScareWindow();
-      
+
       // Force garbage collection if available
       if (global.gc) {
         global.gc();
@@ -962,20 +1017,20 @@ app.on('before-quit', async (event) => {
 async function validateQuestionsAvailable() {
   try {
     const documents = configManager.get('documents') || [];
-    
+
     if (documents.length === 0) {
       console.warn('No documents configured. Timer will not start until documents are added.');
       return false;
     }
-    
+
     // Try to load cached questions first
     await questionGenerator.loadCache();
-    
+
     if (questionGenerator.hasQuestions()) {
       console.log('Using cached questions from previous session');
       return true;
     }
-    
+
     // No cached questions, try to generate new ones
     console.log('No cached questions found, generating new questions...');
     return await regenerateQuestions();
@@ -992,35 +1047,35 @@ async function validateQuestionsAvailable() {
 async function regenerateQuestions() {
   try {
     const documents = configManager.get('documents') || [];
-    
+
     if (documents.length === 0) {
       console.warn('Cannot generate questions: no documents configured');
       return false;
     }
-    
+
     // Process documents
     console.log(`Processing ${documents.length} documents...`);
     const processedDocs = await documentProcessor.processAllDocuments();
-    
+
     if (processedDocs.length === 0) {
       console.error('No documents could be processed successfully');
       return false;
     }
-    
+
     // Generate questions with fallback
     const result = await questionGenerator.generateQuestionsWithFallback(processedDocs, 20);
-    
+
     if (result.error) {
       console.error('Question generation failed:', result.error);
       return false;
     }
-    
+
     if (result.usedCache) {
       console.log('Using cached questions from previous session');
     } else {
       console.log(`Generated ${result.questions.length} new questions`);
     }
-    
+
     return result.questions.length > 0;
   } catch (error) {
     console.error('Error regenerating questions:', error);
@@ -1035,7 +1090,7 @@ async function saveSessionState() {
   try {
     const fs = require('fs').promises;
     const sessionPath = path.join(app.getPath('userData'), 'session.json');
-    
+
     // Load existing session data if it exists
     let sessionState = {
       lastShutdown: new Date().toISOString(),
@@ -1043,17 +1098,17 @@ async function saveSessionState() {
       correctAnswers: 0,
       currentStreak: 0
     };
-    
+
     try {
       const existingData = await fs.readFile(sessionPath, 'utf8');
       sessionState = { ...sessionState, ...JSON.parse(existingData) };
     } catch (error) {
       // File doesn't exist yet, use defaults
     }
-    
+
     // Update shutdown timestamp
     sessionState.lastShutdown = new Date().toISOString();
-    
+
     await fs.writeFile(sessionPath, JSON.stringify(sessionState, null, 2), 'utf8');
     console.log('Session state saved');
   } catch (error) {
